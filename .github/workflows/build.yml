@@ -27,7 +27,7 @@ jobs:
       - name: Package NuGets
         run: |
           $pkgVer = ($env:NUPKG_MAJOR + "-alpha" + $env:GITHUB_RUN_ID)
-          if ("${{ github.event.inputs.createRelease }"} -eq "true") {
+          if ("${{ github.event.inputs.createRelease }}" -eq "true") {
             $pkgVer = $env:NUPKG_MAJOR
           }
           New-Item -ItemType Directory -Force -Path .\artifacts
