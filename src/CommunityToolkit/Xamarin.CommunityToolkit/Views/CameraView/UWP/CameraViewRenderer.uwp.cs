@@ -111,7 +111,8 @@ namespace Xamarin.CommunityToolkit.UI.Views
 					else
 					{
 						var tuple = await GetImage();
-						Element.RaiseMediaCaptured(new MediaCapturedEventArgs(tuple.Item1, tuple.Item2));
+						if (tuple != null)
+							Element.RaiseMediaCaptured(new MediaCapturedEventArgs(tuple.Item1, tuple.Item2));
 					}
 					break;
 				case CameraCaptureMode.Video:
@@ -129,60 +130,70 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			}
 		}
 
-		async Task<Tuple<string?, byte[]?>> GetImage()
+		async Task<Tuple<string?, byte[]?>?> GetImage()
 		{
-			_ = mediaCapture ?? throw new NullReferenceException();
-
-			IsBusy = true;
-			var imageProp = ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8);
-			var lowLagCapture = await mediaCapture.PrepareLowLagPhotoCaptureAsync(imageProp);
-			var capturedPhoto = await lowLagCapture.CaptureAsync();
-
-			await lowLagCapture.FinishAsync();
-			string? filePath = null;
-
-			// See TODO on CameraView.SavePhotoToFile
-			/*if (Element.SavePhotoToFile)
+			try
 			{
-				// TODO replace platform specifics
-				// var localFolder = Element.OnThisPlatform().GetPhotoFolder();
-				var localFolder = "PhotoFolder";
-				var destinationFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(localFolder, CreationCollisionOption.OpenIfExists);
-				var file = await destinationFolder.CreateFileAsync($"{DateTime.Now.ToString("yyyyddMM_HHmmss")}.jpg", CreationCollisionOption.GenerateUniqueName);
-				filePath = file.Path;
-				using (var stream = await file.OpenAsync(FileAccessMode.ReadWrite))
+				_ = mediaCapture ?? throw new NullReferenceException();
+
+				IsBusy = true;
+				var imageProp = ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8);
+				var lowLagCapture = await mediaCapture.PrepareLowLagPhotoCaptureAsync(imageProp);
+				var capturedPhoto = await lowLagCapture.CaptureAsync();
+
+				await lowLagCapture.FinishAsync();
+				string? filePath = null;
+
+				// See TODO on CameraView.SavePhotoToFile
+				/*if (Element.SavePhotoToFile)
 				{
-					var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
-					encoder.SetSoftwareBitmap(capturedPhoto.Frame.SoftwareBitmap);
-					await encoder.FlushAsync();
+					// TODO replace platform specifics
+					// var localFolder = Element.OnThisPlatform().GetPhotoFolder();
+					var localFolder = "PhotoFolder";
+					var destinationFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(localFolder, CreationCollisionOption.OpenIfExists);
+					var file = await destinationFolder.CreateFileAsync($"{DateTime.Now.ToString("yyyyddMM_HHmmss")}.jpg", CreationCollisionOption.GenerateUniqueName);
+					filePath = file.Path;
+					using (var stream = await file.OpenAsync(FileAccessMode.ReadWrite))
+					{
+						var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+						encoder.SetSoftwareBitmap(capturedPhoto.Frame.SoftwareBitmap);
+						await encoder.FlushAsync();
+					}
+				}*/
+
+				// Encode an output stream, it seems you can't use the UWP Frame stream directly
+				using var outputStream = new InMemoryRandomAccessStream();
+				var outputEncoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, outputStream);
+
+				var orientation = rotationHelper?.GetCameraCaptureOrientation();
+				if (orientation != SimpleOrientation.NotRotated)
+				{
+					outputEncoder.BitmapTransform.Rotation = DeviceOrientationTotBitmapRotation(orientation);
 				}
-			}*/
 
-			// Encode an output stream, it seems you can't use the UWP Frame stream directly
-			using var outputStream = new InMemoryRandomAccessStream();
-			var outputEncoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, outputStream);
+				outputEncoder.SetSoftwareBitmap(capturedPhoto.Frame.SoftwareBitmap);
+				await outputEncoder.FlushAsync();
 
-			var orientation = rotationHelper?.GetCameraCaptureOrientation();
-			if (orientation != SimpleOrientation.NotRotated)
-			{
-				outputEncoder.BitmapTransform.Rotation = DeviceOrientationTotBitmapRotation(orientation);
+				// See TODO on CameraView.SavePhotoToFile
+				// if (!Element.SavePhotoToFile)
+				// {
+
+				using var memoryStream = new MemoryStream();
+				await outputStream.AsStream().CopyToAsync(memoryStream);
+				var imageData = memoryStream.ToArray();
+
+				// }
+				return new Tuple<string?, byte[]?>(filePath, imageData);
 			}
-
-			outputEncoder.SetSoftwareBitmap(capturedPhoto.Frame.SoftwareBitmap);
-			await outputEncoder.FlushAsync();
-
-			// See TODO on CameraView.SavePhotoToFile
-			// if (!Element.SavePhotoToFile)
-			// {
-
-			using var memoryStream = new MemoryStream();
-			await outputStream.AsStream().CopyToAsync(memoryStream);
-			var imageData = memoryStream.ToArray();
-
-			// }
-
-			IsBusy = false;
-			return new Tuple<string?, byte[]?>(filePath, imageData);
+			catch (Exception ex)
+			{
+				Element?.RaiseMediaCaptureFailed($"Error while taking photo. {ex.Message}");
+				return null;
+			}
+			finally
+			{
+				IsBusy = false;
+			}
 		}
 
 		// Mirror the device orientation into the bitmap
@@ -269,8 +280,7 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			{
 				case nameof(CameraView.CameraOptions):
 				case nameof(CameraView.CaptureMode):
-					await CleanupCameraAsync();
-					await InitializeCameraAsync();
+					await RestartCameraAsync();
 					break;
 				case nameof(CameraView.FlashMode):
 					if (flash != null)
@@ -286,6 +296,12 @@ namespace Xamarin.CommunityToolkit.UI.Views
 					break;
 			}
 			base.OnElementPropertyChanged(sender, e);
+		}
+
+		async Task RestartCameraAsync()
+		{
+			await CleanupCameraAsync();
+			await InitializeCameraAsync();
 		}
 
 		void UpdateZoom()
@@ -398,6 +414,8 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			catch (Exception ex)
 			{
 				Element?.RaiseMediaCaptureFailed($"Other error while initializing camera. {ex.Message}");
+				IsBusy = false;
+				return;
 			}
 
 			try
@@ -474,29 +492,41 @@ namespace Xamarin.CommunityToolkit.UI.Views
 
 		async Task CleanupCameraAsync()
 		{
-			Available = false;
-			IsBusy = true;
-			if (mediaCapture == null)
-				return;
-
-			if (isPreviewing)
-				await mediaCapture.StopPreviewAsync();
-
-			if (mediaRecording != null)
-				Element.RaiseMediaCaptured(new MediaCapturedEventArgs(await StopRecord()));
-
-			await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+			try
 			{
-				Control.Source = null;
+				Available = false;
+				IsBusy = true;
+				if (mediaCapture == null)
+					return;
 
-				mediaCapture.CaptureDeviceExclusiveControlStatusChanged -= CaptureDeviceExclusiveControlStatusChanged;
-				mediaCapture.Dispose();
-				mediaCapture = null;
+				if (isPreviewing)
+				{
+					await mediaCapture.StopPreviewAsync();
+					await Task.Delay(50);
+					isPreviewing = false;
+				}
+				if (mediaRecording != null)
+					Element.RaiseMediaCaptured(new MediaCapturedEventArgs(await StopRecord()));
 
-				rotationHelper?.RemoveEventHandler();
-				rotationHelper = null;
-			});
-			IsBusy = false;
+				await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+				{
+					Control.Source = null;
+
+					if (mediaCapture != null)
+					{
+						mediaCapture.CaptureDeviceExclusiveControlStatusChanged -= CaptureDeviceExclusiveControlStatusChanged;
+						mediaCapture.Dispose();
+						mediaCapture = null;
+					}
+
+					rotationHelper?.RemoveEventHandler();
+					rotationHelper = null;
+				});
+			}
+			finally
+			{
+				IsBusy = false;
+			}
 		}
 
 		protected override async void Dispose(bool disposing)
@@ -511,19 +541,15 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			if (args.Status == MediaCaptureDeviceExclusiveControlStatus.SharedReadOnlyAvailable)
 			{
 				Element?.RaiseMediaCaptureFailed("The camera preview can't be displayed because another app has exclusive access");
+				IsBusy = false;
 			}
 			else if (args.Status == MediaCaptureDeviceExclusiveControlStatus.ExclusiveControlAvailable && !isPreviewing)
 			{
 				await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
 				{
-					if (mediaCapture != null)
-						await mediaCapture.StartPreviewAsync();
-
-					Available = true;
+					await RestartCameraAsync();
 				});
 			}
-
-			IsBusy = false;
 		}
 
 		// Apply new rotation property to the stream
