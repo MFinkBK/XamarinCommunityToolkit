@@ -156,6 +156,12 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			base.OnPause();
 		}
 
+		public override async void OnConfigurationChanged(global::Android.Content.Res.Configuration newConfig)
+		{
+			base.OnConfigurationChanged(newConfig);
+			await RetrieveCameraDevice();
+		}
+
 		void StartBackgroundThread()
 		{
 			backgroundThread = new HandlerThread("CameraBackground");
