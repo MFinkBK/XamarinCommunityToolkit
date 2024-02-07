@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="MSBuild.Sdk.Extras/3.0.44">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;Xamarin.iOS10;MonoAndroid10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;Xamarin.iOS10;MonoAndroid13.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);uap10.0.19041</TargetFrameworks>
     <AssemblyName>Xamarin.CommunityToolkit</AssemblyName>
     <RootNamespace>Xamarin.CommunityToolkit</RootNamespace>
