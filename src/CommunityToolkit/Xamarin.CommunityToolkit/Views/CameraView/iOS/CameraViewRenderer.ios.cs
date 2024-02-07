@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using AVFoundation;
+using CoreGraphics;
 using Foundation;
 using Photos;
 using UIKit;
@@ -72,7 +73,8 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			// if (!Element.SavePhotoToFile && photoData != null)
 			if (photoData != null)
 			{
-				var data = UIImage.LoadFromData(photoData)?.AsJPEG().ToArray();
+				var image = UIImage.LoadFromData(photoData);
+				var data = image?.NormalizeOrientation().Scale(image.Size).AsJPEG().ToArray();
 				Device.BeginInvokeOnMainThread(() =>
 				{
 					Element.RaiseMediaCaptured(new MediaCapturedEventArgs(imageData: data));
@@ -221,6 +223,33 @@ namespace Xamarin.CommunityToolkit.UI.Views
 						Control.StopRecord();
 					break;
 			}
+		}
+	}
+
+	/// <summary>
+	/// Borrowed from Maui's Microsoft.Maui.Graphics.Platform.iOS namespace, see:
+	/// https://github.com/dotnet/maui/blob/main/src/Graphics/src/Graphics/Platforms/iOS/UIImageExtensions.cs
+	/// </summary>
+	public static class UIImageExtensions
+	{
+		public static UIImage NormalizeOrientation(this UIImage target, bool disposeOriginal = false)
+		{
+			if (target.Orientation == UIImageOrientation.Up)
+			{
+				return target;
+			}
+
+			UIGraphics.BeginImageContextWithOptions(target.Size, false, target.CurrentScale);
+			target.Draw(CGPoint.Empty);
+			var image = UIGraphics.GetImageFromCurrentImageContext();
+			UIGraphics.EndImageContext();
+
+			if (disposeOriginal)
+			{
+				target.Dispose();
+			}
+
+			return image;
 		}
 	}
 }
