@@ -16,7 +16,7 @@ jobs:
     build:
       name: Build
       env:
-        NUPKG_MAJOR: 2.0.10
+        NUPKG_MAJOR: 2.0.11
       runs-on: windows-latest
       steps:
       - name: Checkout
@@ -35,7 +35,7 @@ jobs:
             $pkgVer = $env:NUPKG_MAJOR
           }
           New-Item -ItemType Directory -Force -Path .\artifacts
-          msbuild /t:Pack /p:Configuration=Release /p:PackageOutputPath=..\..\..\artifacts /p:PackageVersion=$pkgVer /p:IncludeSymbols=true .\src\CommunityToolkit\Xamarin.CommunityToolkit\Xamarin.CommunityToolkit.csproj 
+          msbuild /t:Pack /p:Configuration=Release /p:PackageOutputPath=..\..\..\artifacts /p:PackageVersion=$pkgVer /p:IncludeSymbols=true .\src\CommunityToolkit\Xamarin.CommunityToolkit\Xamarin.CommunityToolkit.csproj
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
