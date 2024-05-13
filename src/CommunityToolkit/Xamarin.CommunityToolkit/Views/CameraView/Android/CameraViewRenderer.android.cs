@@ -58,6 +58,13 @@ namespace Xamarin.CommunityToolkit.UI.Views
 
 			switch (e.PropertyName)
 			{
+				case nameof(VisualElement.IsVisible):
+					var isVisible = Element?.IsVisible ?? false;
+					if (!isVisible)
+						camerafragment.OnPause();
+					else
+						camerafragment.OnResume();
+					break;
 				case nameof(CameraView.CameraOptions):
 					await camerafragment.RetrieveCameraDevice();
 					break;
