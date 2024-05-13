@@ -409,6 +409,10 @@ namespace Xamarin.CommunityToolkit.UI.Views
 					matrix.PostRotate(rotation);
 					using (var rotatedImage = Bitmap.CreateBitmap(originalImage, 0, 0, originalImage.Width, originalImage.Height, matrix, true))
 					{
+						originalImage.Recycle();
+						originalImage.Dispose();
+						originalImage = null;
+
 						using (var stream = new MemoryStream())
 						{
 							rotatedImage?.Compress(Bitmap.CompressFormat.Jpeg, 100, stream);
