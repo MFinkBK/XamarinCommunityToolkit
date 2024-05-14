@@ -337,7 +337,8 @@ namespace Xamarin.CommunityToolkit.UI.Views
 		{
 			foreach (var cam in cameraDevices)
 			{
-				if (cam.EnclosureLocation?.Panel == panel)
+				if (cam.EnclosureLocation?.Panel == panel ||
+					(cam.EnclosureLocation == null && panel == Windows.Devices.Enumeration.Panel.Unknown))
 					return cam;
 			}
 			return null;
