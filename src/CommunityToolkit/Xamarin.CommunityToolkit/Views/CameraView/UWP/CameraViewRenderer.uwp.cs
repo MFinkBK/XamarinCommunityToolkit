@@ -112,7 +112,7 @@ namespace Xamarin.CommunityToolkit.UI.Views
 					{
 						var tuple = await GetImage();
 						if (tuple != null)
-							Element.RaiseMediaCaptured(new MediaCapturedEventArgs(tuple.Item1, tuple.Item2));
+							Element.RaiseMediaCaptured(new MediaCapturedEventArgs(tuple.Item1, tuple.Item2, tuple.Item3));
 					}
 					break;
 				case CameraCaptureMode.Video:
@@ -130,7 +130,7 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			}
 		}
 
-		async Task<Tuple<string?, byte[]?>?> GetImage()
+		async Task<Tuple<string?, byte[]?, int>?> GetImage()
 		{
 			try
 			{
@@ -165,10 +165,20 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				using var outputStream = new InMemoryRandomAccessStream();
 				var outputEncoder = await BitmapEncoder.CreateAsync(BitmapEncoder.BmpEncoderId, outputStream);
 
+				var rotationAngleDegrees = 0;
+
 				var orientation = rotationHelper?.GetCameraCaptureOrientation();
-				if (orientation != SimpleOrientation.NotRotated)
+
+				if (Element?.AutoRotatePhoto ?? false)
 				{
-					outputEncoder.BitmapTransform.Rotation = DeviceOrientationTotBitmapRotation(orientation);
+					if (orientation != SimpleOrientation.NotRotated)
+					{
+						outputEncoder.BitmapTransform.Rotation = DeviceOrientationToBitmapRotation(orientation);
+					}
+				}
+				else
+				{
+					rotationAngleDegrees = GetRotationAngleFromDeviceOrientation(orientation);
 				}
 
 				outputEncoder.SetSoftwareBitmap(capturedPhoto.Frame.SoftwareBitmap);
@@ -183,7 +193,7 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				var imageData = memoryStream.ToArray();
 
 				// }
-				return new Tuple<string?, byte[]?>(filePath, imageData);
+				return new Tuple<string?, byte[]?, int>(filePath, imageData, rotationAngleDegrees);
 			}
 			catch (Exception ex)
 			{
@@ -196,8 +206,25 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			}
 		}
 
+		/// <summary>
+		/// Returns the rotation angle that an image must be rotated that was taken with a device with
+		/// given orientation
+		/// </summary>
+		/// <param name="orientation">device orientation, or null when none could be determined</param>
+		/// <returns>rotation angle, in degrees</returns>
+		static int GetRotationAngleFromDeviceOrientation(SimpleOrientation? orientation)
+		{
+			return orientation switch
+			{
+				SimpleOrientation.Rotated90DegreesCounterclockwise => 270,
+				SimpleOrientation.Rotated180DegreesCounterclockwise => 180,
+				SimpleOrientation.Rotated270DegreesCounterclockwise => 90,
+				_ => 0,
+			};
+		}
+
 		// Mirror the device orientation into the bitmap
-		BitmapRotation DeviceOrientationTotBitmapRotation(SimpleOrientation? orientation)
+		static BitmapRotation DeviceOrientationToBitmapRotation(SimpleOrientation? orientation)
 		{
 			return orientation switch
 			{

@@ -113,6 +113,25 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			set => SetValue(MaxZoomProperty, value);
 		}
 
+		public static readonly BindableProperty AutoRotatePhotoProperty =
+			BindableProperty.Create(
+				nameof(AutoRotatePhoto),
+				typeof(bool),
+				typeof(CameraView),
+				true);
+
+		/// <summary>
+		/// Specifies if the camera view should auto rotate the image based on the device orientation;
+		/// default value is <see langword="true"/>. When set to <see langword="false"/>, the rotation
+		/// angle is provided in <see cref="MediaCapturedEventArgs"/> instead. This may be preferable
+		/// when the image has to be processed anyway and saves seconds on slow devices.
+		/// </summary>
+		public bool AutoRotatePhoto
+		{
+			get => (bool)GetValue(AutoRotatePhotoProperty);
+			set => SetValue(AutoRotatePhotoProperty, value);
+		}
+
 		internal void RaiseMediaCaptured(MediaCapturedEventArgs args) => MediaCaptured?.Invoke(this, args);
 
 		internal void RaiseMediaCaptureFailed(string message) => MediaCaptureFailed?.Invoke(this, message);

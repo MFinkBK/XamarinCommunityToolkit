@@ -402,7 +402,9 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				Sound(MediaActionSoundType.ShutterClick);
 				OnPhoto(this, (filePath, Element.SavePhotoToFile ? null : bytes);*/
 
-				if (rotation != 0)
+				if (Element != null &&
+					Element.AutoRotatePhoto &&
+					rotation != 0)
 				{
 					var originalImage = BitmapFactory.DecodeByteArray(bytes, 0, bytes.Length) ?? throw new NullReferenceException();
 					var matrix = new Matrix();

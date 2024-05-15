@@ -74,10 +74,23 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			if (photoData != null)
 			{
 				var image = UIImage.LoadFromData(photoData);
-				var data = image?.NormalizeOrientation().Scale(image.Size).AsJPEG().ToArray();
+
+				var rotationAngleDegrees = 0;
+				byte[]? data;
+				if (Element.AutoRotatePhoto)
+				{
+					var originalSize = image?.Size;
+					data = image?.NormalizeOrientation(disposeOriginal: true).Scale(originalSize!.Value).AsJPEG().ToArray();
+				}
+				else
+				{
+					// keep rotationAngleDegrees as 0, as the JPEG image's EXIF orientation determines the image orientation
+					data = photoData.ToArray();
+				}
+
 				Device.BeginInvokeOnMainThread(() =>
 				{
-					Element.RaiseMediaCaptured(new MediaCapturedEventArgs(imageData: data));
+					Element.RaiseMediaCaptured(new MediaCapturedEventArgs(imageData: data, rotation: rotationAngleDegrees));
 				});
 				return;
 			}
