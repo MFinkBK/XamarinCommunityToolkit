@@ -1,4 +1,4 @@
----
+# Fork Notice
 
 Note: This is a fork of the `Xamarin.CommunityToolkit` that is used by the
 company Bittner + Krull Softwaresysteme GmbH. It was created in preparation
@@ -9,7 +9,7 @@ The NuGet package produced by this project has the prefix `Bk.` and is
 released in this GitHub project for anyone to be used. The remainder of this
 README is the original unmodified version of the file.
 
----
+----
 
 [<img src="https://raw.githubusercontent.com/dotnet-foundation/swag/master/logo/dotnetfoundation_v4.svg" alt=".NET Foundation" width=100>](https://dotnetfoundation.org)
 
