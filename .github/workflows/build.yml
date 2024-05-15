@@ -20,11 +20,11 @@ jobs:
       runs-on: windows-latest
       steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.3.1
+        uses: microsoft/setup-msbuild@v2
       - name: Setup Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
@@ -42,7 +42,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path .\artifacts
           msbuild /t:Pack /p:Configuration=Release /p:PackageOutputPath=..\..\..\artifacts /p:PackageVersion=$pkgVer /p:IncludeSymbols=true .\src\CommunityToolkit\Xamarin.CommunityToolkit\Xamarin.CommunityToolkit.csproj
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NuGet
           path: .\artifacts
