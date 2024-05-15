@@ -16,7 +16,7 @@ jobs:
     build:
       name: Build
       env:
-        NUPKG_MAJOR: 2.0.11
+        NUPKG_MAJOR: 2.0.12
       runs-on: windows-latest
       steps:
       - name: Checkout
