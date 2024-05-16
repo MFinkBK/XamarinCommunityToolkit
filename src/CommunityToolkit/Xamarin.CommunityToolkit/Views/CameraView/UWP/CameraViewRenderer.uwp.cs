@@ -529,7 +529,15 @@ namespace Xamarin.CommunityToolkit.UI.Views
 
 				if (isPreviewing)
 				{
-					await mediaCapture.StopPreviewAsync();
+					try
+					{
+						await mediaCapture.StopPreviewAsync();
+					}
+					catch (Exception)
+					{
+						// the call may fail when an external camera was already removed
+					}
+
 					await Task.Delay(50);
 					isPreviewing = false;
 				}
