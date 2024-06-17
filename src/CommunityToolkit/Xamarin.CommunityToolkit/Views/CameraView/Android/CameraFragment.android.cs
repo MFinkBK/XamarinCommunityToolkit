@@ -242,7 +242,12 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				var displaySize = new APoint();
 				Activity.WindowManager?.DefaultDisplay?.GetSize(displaySize);
 
-				_ = texture ?? throw new NullReferenceException();
+				if(texture is null)
+				{
+					CloseDevice();
+					return;
+				}
+
 				var rotatedViewWidth = texture.Width;
 				var rotatedViewHeight = texture.Height;
 				var maxPreviewWidth = displaySize.X;
@@ -740,6 +745,8 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				LogError("Error close device", e);
 			}
 			CloseSession();
+			StopBackgroundThread();
+
 			try
 			{
 				if (sessionBuilder != null)
