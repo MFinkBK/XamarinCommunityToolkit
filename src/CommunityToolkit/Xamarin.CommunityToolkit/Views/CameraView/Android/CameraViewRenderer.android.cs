@@ -160,13 +160,6 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			if (disposed)
 				return;
 
-			if (camerafragment != null)
-			{
-				FragmentManager.BeginTransaction()
-				.Remove(camerafragment)
-				.Commit();
-			}
-
 			camerafragment?.Dispose();
 			camerafragment = null;
 

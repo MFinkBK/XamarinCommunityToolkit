@@ -159,7 +159,11 @@ namespace Xamarin.CommunityToolkit.UI.Views
 		public override async void OnConfigurationChanged(global::Android.Content.Res.Configuration newConfig)
 		{
 			base.OnConfigurationChanged(newConfig);
-			await RetrieveCameraDevice();
+
+			if (texture != null)
+			{
+				await RetrieveCameraDevice();
+			}
 		}
 
 		void StartBackgroundThread()
@@ -242,7 +246,7 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				var displaySize = new APoint();
 				Activity.WindowManager?.DefaultDisplay?.GetSize(displaySize);
 
-				if(texture is null)
+				if (texture is null)
 				{
 					CloseDevice();
 					return;
@@ -745,7 +749,6 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				LogError("Error close device", e);
 			}
 			CloseSession();
-			StopBackgroundThread();
 
 			try
 			{
