@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -338,16 +339,28 @@ namespace Xamarin.CommunityToolkit.UI.Views
 			if (!zoomControl.Supported)
 				return;
 
+			var newZoomValue = Clamp(Element.Zoom, zoomControl.Min, zoomControl.Max);
+
+			// round down to fixed step value
+			newZoomValue -= newZoomValue % zoomControl.Step;
+
 			var settings = new ZoomSettings
 			{
 				// TODO replace clamp
-				Value = Clamp(Element.Zoom, zoomControl.Min, zoomControl.Max),
-				Mode = zoomControl.SupportedModes.Contains(ZoomTransitionMode.Smooth)
-					? ZoomTransitionMode.Smooth
+				Value = newZoomValue,
+				Mode = zoomControl.SupportedModes.Contains(ZoomTransitionMode.Direct)
+					? ZoomTransitionMode.Direct
 					: zoomControl.SupportedModes.First()
 			};
 
-			zoomControl.Configure(settings);
+			try
+			{
+				zoomControl.Configure(settings);
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine($"couldn't set zoom factor {newZoomValue}, mode {settings.Mode}: {ex.Message}");
+			}
 
 			// Added here since it's an internal method to XF
 			static float Clamp(double value, float min, float max)
