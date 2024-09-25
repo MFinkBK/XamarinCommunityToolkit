@@ -74,8 +74,7 @@ namespace Xamarin.CommunityToolkit.UI.Views
 					break;
 				case nameof(CameraView.FlashMode):
 					camerafragment.SetFlash();
-					if (Element?.CaptureMode == CameraCaptureMode.Video)
-						camerafragment.UpdateRepeatingRequest();
+					camerafragment.UpdateRepeatingRequest();
 					break;
 				case nameof(CameraView.Zoom):
 					camerafragment.ApplyZoom();

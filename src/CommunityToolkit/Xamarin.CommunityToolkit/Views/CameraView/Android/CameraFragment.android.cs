@@ -716,8 +716,7 @@ namespace Xamarin.CommunityToolkit.UI.Views
 
 				sessionBuilder.Set(CaptureRequest.ControlMode ?? throw new NullReferenceException(), (int)ControlMode.Auto);
 				sessionBuilder.Set(CaptureRequest.ControlAeMode ?? throw new NullReferenceException(), (int)ControlAEMode.On);
-				if (cameraTemplate == CameraTemplate.Record)
-					sessionBuilder.Set(CaptureRequest.FlashMode ?? throw new NullReferenceException(), (int)flashMode);
+				sessionBuilder.Set(CaptureRequest.FlashMode ?? throw new NullReferenceException(), (int)flashMode);
 
 				session.SetRepeatingRequest(sessionBuilder.Build(), listener: null, backgroundHandler);
 				repeatingIsRunning = true;
