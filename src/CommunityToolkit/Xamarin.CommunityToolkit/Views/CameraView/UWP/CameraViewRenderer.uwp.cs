@@ -437,7 +437,15 @@ namespace Xamarin.CommunityToolkit.UI.Views
 				// FileLoadException is not thrown in StartPreviewAsync().
 				mediaCapture.CaptureDeviceExclusiveControlStatusChanged += CaptureDeviceExclusiveControlStatusChanged;
 
-				flash = await Lamp.GetDefaultAsync();
+				try
+				{
+					flash = await Lamp.GetDefaultAsync();
+				}
+				catch (Exception)
+				{
+					// device has no flash
+					flash = null;
+				}
 
 				if (mediaCapture.VideoDeviceController.ZoomControl.Supported)
 					Element.MaxZoom = mediaCapture.VideoDeviceController.ZoomControl.Max;
